@@ -19,6 +19,8 @@ import { Settings } from "@/pages/Settings";
 import { AIDataFlow } from "@/pages/AIDataFlow";
 import { BusinessIntelligence } from "@/pages/BusinessIntelligence";
 import { useAppearance } from "@/hooks/use-appearance";
+import { useAuth } from "@/lib/auth-context";
+import { BackgroundEffects } from "@/components/layout/BackgroundEffects";
 
 type Page =
   | "dashboard" | "inbox" | "customers" | "projects" | "tasks"
@@ -27,13 +29,13 @@ type Page =
   | "business-intelligence";
 
 export function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, login, logout, allowedModules } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const appearance = useAppearance();
 
-  const handleLogin = (_role: string) => {
-    setIsLoggedIn(true);
+  const handleLogin = (role: string) => {
+    login(role);
     setCurrentPage("dashboard");
   };
 
@@ -42,7 +44,12 @@ export function App() {
   };
 
   if (!isLoggedIn) {
-    return <Login onLogin={handleLogin} />;
+    return (
+      <>
+        <BackgroundEffects />
+        <Login onLogin={handleLogin} />
+      </>
+    );
   }
 
   const renderPage = () => {
@@ -76,22 +83,24 @@ export function App() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background relative">
+      <BackgroundEffects />
       <AppSidebar
         currentPage={currentPage}
         onNavigate={handleNavigate}
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        onLogout={() => setIsLoggedIn(false)}
+        onLogout={logout}
+        allowedModules={allowedModules}
       />
       <Topbar
         currentPage={currentPage}
         onNavigate={handleNavigate}
         sidebarCollapsed={sidebarCollapsed}
-        
+
       />
       <main className={cn(
-        "min-h-screen pt-16 transition-all duration-300",
+        "min-h-screen pt-16 transition-all duration-300 relative z-10",
         sidebarCollapsed ? "pl-16" : "pl-60"
       )}>
         <div className="p-6 max-w-[1400px]">

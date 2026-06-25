@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Sparkles, Bell, ChevronDown, X, Loader2, Command } from "lucide-react";
+import { useAuth } from "@/lib/auth-context";
 
 const suggestions = [
   "Show projects delayed",
@@ -156,6 +157,8 @@ const pageTitles: Record<string, string> = {
 };
 
 export function Topbar({ currentPage, onNavigate, sidebarCollapsed }: TopbarProps) {
+  const { roleData } = useAuth();
+
   return (
     <header className={cn(
       "fixed top-0 right-0 h-16 z-30 flex items-center gap-4 px-4 border-b border-border bg-background/95 backdrop-blur-sm transition-all duration-300",
@@ -177,11 +180,11 @@ export function Topbar({ currentPage, onNavigate, sidebarCollapsed }: TopbarProp
         </Button>
         <div className="flex items-center gap-2 px-2 py-1 rounded-lg hover:bg-accent cursor-pointer transition-colors" onClick={() => onNavigate("settings")}>
           <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary">
-            MF
+            {roleData?.avatar || "U"}
           </div>
           <div className="hidden sm:flex flex-col">
-            <span className="text-xs font-medium text-foreground">Arjay Delos Santos</span>
-            <span className="text-[10px] text-muted-foreground">CEO</span>
+            <span className="text-xs font-medium text-foreground">{roleData?.user || "User"}</span>
+            <span className="text-[10px] text-muted-foreground">{roleData?.name || "User"}</span>
           </div>
           <ChevronDown className="w-3 h-3 text-muted-foreground" />
         </div>

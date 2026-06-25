@@ -10,6 +10,7 @@ import {
   Building, Save
 } from "lucide-react";
 import type { ThemeMode, AccentColor } from "@/hooks/use-appearance";
+import { useAuth } from "@/lib/auth-context";
 
 const settingsSections = [
   { id: "profile", label: "Profile", icon: User },
@@ -39,6 +40,7 @@ interface SettingsProps {
 }
 
 export function Settings({ themeMode = "dark", accentColor = "electric-blue", onChangeTheme, onChangeAccent }: SettingsProps) {
+  const { roleData } = useAuth();
   const [activeSection, setActiveSection] = useState("profile");
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
@@ -93,20 +95,22 @@ export function Settings({ themeMode = "dark", accentColor = "electric-blue", on
                 <p className="text-xs text-muted-foreground">Manage your personal information</p>
               </div>
               <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary">MF</div>
+                <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center text-2xl font-bold text-primary">
+                  {roleData?.avatar || "U"}
+                </div>
                 <div>
-                  <p className="text-sm font-semibold text-foreground">Arjay Delos Santos</p>
-                  <p className="text-xs text-muted-foreground">CEO · Meridian Construction Group</p>
+                  <p className="text-sm font-semibold text-foreground">{roleData?.user || "User"}</p>
+                  <p className="text-xs text-muted-foreground">{roleData?.name || "User"} · Meridian Construction Group</p>
                   <Button variant="outline" size="sm" className="mt-2 text-xs h-7">Change Photo</Button>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { label: "Full Name", value: "Arjay Delos Santos" },
-                  { label: "Job Title", value: "Chief Executive Officer" },
-                  { label: "Email", value: "arjay_ds@flowos.com" },
+                  { label: "Full Name", value: roleData?.user || "User" },
+                  { label: "Job Title", value: roleData?.name || "User" },
+                  { label: "Email", value: roleData?.email || "user@flowos.com" },
                   { label: "Phone", value: "+63 (906) 123-1234" },
-                  { label: "Department", value: "Executive" },
+                  { label: "Department", value: roleData?.name || "User" },
                   { label: "Location", value: "Manila, PH" },
                 ].map(f => (
                   <div key={f.label} className="space-y-1">

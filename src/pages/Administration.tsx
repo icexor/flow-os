@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -17,9 +19,10 @@ import {
   Shield, Users, Key, AlertTriangle, CheckCircle,
   Plus, Edit, Trash2,
   Globe, Bell, Activity,
-  MoreHorizontal, User,
+  MoreHorizontal, User, Lock, Unlock, ChevronRight, Eye
 } from "lucide-react";
 import { roles as initialRoles, approvalQueue } from "@/lib/data";
+import { defaultRolePermissions, allModules, allActions, type PermissionModule, type PermissionAction, type RolePermissions } from "@/lib/permissions";
 
 const adminSections = [
   { id: "approvals", label: "Approval Queue", icon: CheckCircle, badge: 7, color: "text-orange-400" },
@@ -68,7 +71,7 @@ interface AdminProps {
 }
 
 export function Administration({ }: AdminProps) {
-  const [activeSection, setActiveSection] = useState("approvals");
+  const [activeSection, setActiveSection] = useState("roles");
   const [approvalFilter, setApprovalFilter] = useState("waiting");
   const [approvedItems, setApprovedItems] = useState<Set<string>>(new Set());
   const [rejectedItems, setRejectedItems] = useState<Set<string>>(new Set());
@@ -80,6 +83,10 @@ export function Administration({ }: AdminProps) {
   const [newRoleDialog, setNewRoleDialog] = useState(false);
   const [deleteRoleDialog, setDeleteRoleDialog] = useState<Role | null>(null);
   const [roleForm, setRoleForm] = useState({ name: "", description: "", color: "blue", user: "" });
+
+  // Permission editing state
+  const [editingPermissions, setEditingPermissions] = useState<RolePermissions | null>(null);
+  const [permissionForm, setPermissionForm] = useState<RolePermissions | null>(null);
 
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; type: "approve" | "reject"; itemId: string | null }>({ open: false, type: "approve", itemId: null });
@@ -153,6 +160,56 @@ export function Administration({ }: AdminProps) {
   };
 
   const confirmItem = confirmDialog.itemId ? approvalQueue.find(a => a.id === confirmDialog.itemId) : null;
+
+  const openPermissionEditor = (roleId: string) => {
+    const rolePerm = defaultRolePermissions.find(r => r.id === roleId);
+    if (rolePerm) {
+      setEditingPermissions(rolePerm);
+      setPermissionForm(JSON.parse(JSON.stringify(rolePerm)));
+    }
+  };
+
+  const togglePermission = (module: PermissionModule, action: PermissionAction) => {
+    if (!permissionForm) return;
+    const perms = [...permissionForm.permissions];
+    const idx = perms.findIndex(p => p.module === module);
+    if (idx >= 0) {
+      const actions = perms[idx].actions.includes(action)
+        ? perms[idx].actions.filter(a => a !== action)
+        : [...perms[idx].actions, action];
+      if (actions.length === 0) {
+        perms.splice(idx, 1);
+      } else {
+        perms[idx] = { ...perms[idx], actions };
+      }
+    } else {
+      perms.push({ module, actions: [action] });
+    }
+    setPermissionForm({ ...permissionForm, permissions: perms });
+  };
+
+  const hasPerm = (module: PermissionModule, action: PermissionAction) => {
+    if (!permissionForm) return false;
+    return permissionForm.permissions.some(p => p.module === module && p.actions.includes(action));
+  };
+
+  const savePermissions = () => {
+    // In a real app, this would persist to backend
+    setEditingPermissions(null);
+    setPermissionForm(null);
+  };
+
+  const getRoleColorClass = (roleId: string) => {
+    switch (roleId) {
+      case "ceo": return "bg-blue-500";
+      case "finance": return "bg-emerald-500";
+      case "pm": return "bg-purple-500";
+      case "construction": return "bg-orange-500";
+      case "worker": return "bg-gray-500";
+      case "customer": return "bg-green-500";
+      default: return "bg-primary";
+    }
+  };
 
   return (
     <div className="flex gap-4">
@@ -402,43 +459,87 @@ export function Administration({ }: AdminProps) {
         )}
 
         {activeSection === "roles" && (
-          <div className="space-y-3">
+          <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-foreground">Roles & Permissions</h2>
+              <div>
+                <h2 className="text-lg font-bold text-foreground">Roles & Permissions</h2>
+                <p className="text-xs text-muted-foreground">Configure role-based access control for all modules</p>
+              </div>
               <Button size="sm" className="gap-1.5 text-xs" onClick={() => { setNewRoleDialog(true); setRoleForm({ name: "", description: "", color: "blue", user: "" }); }}>
                 <Plus className="w-3.5 h-3.5" />Add New Role
               </Button>
             </div>
+
+            {/* Role Cards */}
             <div className="grid grid-cols-2 gap-3">
-              {roles.map(role => (
-                <Card key={role.id} className="glass-subtle border-border/60 dark-glow">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-sm font-semibold text-foreground">{role.name}</p>
-                      <div className="flex items-center gap-1">
-                        <Button variant="outline" size="sm" className="text-xs h-6 gap-1" onClick={() => openEditRole(role)}>
-                          <Edit className="w-2.5 h-2.5" />Edit
-                        </Button>
-                        <Button variant="outline" size="sm" className="text-xs h-6 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => setDeleteRoleDialog(role)}>
-                          <Trash2 className="w-2.5 h-2.5" />
+              {roles.map(role => {
+                const rolePerm = defaultRolePermissions.find(r => r.id === role.id);
+                const moduleCount = rolePerm?.permissions.filter(p => p.actions.includes("view")).length || 0;
+                const totalPerms = rolePerm?.permissions.reduce((acc, p) => acc + p.actions.length, 0) || 0;
+                return (
+                  <Card key={role.id} className="glass-subtle border-border/60 dark-glow group">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className={cn("w-2.5 h-2.5 rounded-full", getRoleColorClass(role.id))} />
+                          <p className="text-sm font-semibold text-foreground">{role.name}</p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button variant="outline" size="sm" className="text-xs h-6 gap-1" onClick={() => openEditRole(role)}>
+                            <Edit className="w-2.5 h-2.5" />Edit
+                          </Button>
+                          <Button variant="outline" size="sm" className="text-xs h-6 gap-1 border-red-500/30 text-red-400 hover:bg-red-500/10" onClick={() => setDeleteRoleDialog(role)}>
+                            <Trash2 className="w-2.5 h-2.5" />
+                          </Button>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-3">{role.description}</p>
+
+                      {/* Permission Summary */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-[10px] text-muted-foreground">Module Access</span>
+                          <span className="text-[10px] font-medium text-foreground">{moduleCount} / {allModules.length} modules</span>
+                        </div>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          {allModules.map(m => {
+                            const hasView = rolePerm?.permissions.some(p => p.module === m.id && p.actions.includes("view"));
+                            return (
+                              <div key={m.id} className={cn(
+                                "px-1.5 py-0.5 rounded text-[9px] font-medium transition-colors",
+                                hasView ? "bg-primary/15 text-primary border border-primary/20" : "bg-muted text-muted-foreground/50 border border-transparent"
+                              )} title={m.label}>
+                                {m.label}
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <div className="flex items-center justify-between pt-1">
+                          <span className="text-[10px] text-muted-foreground">Total Permissions</span>
+                          <span className="text-[10px] font-medium text-foreground">{totalPerms} actions</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/40">
+                        <div className="flex items-center gap-1.5">
+                          <User className="w-3 h-3 text-muted-foreground" />
+                          <span className="text-[10px] text-muted-foreground">{role.user}</span>
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 text-[10px] gap-1 text-primary hover:text-primary/80 hover:bg-primary/5 px-2"
+                          onClick={() => openPermissionEditor(role.id)}
+                        >
+                          <Eye className="w-3 h-3" />
+                          Configure Permissions
+                          <ChevronRight className="w-3 h-3" />
                         </Button>
                       </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-2">{role.description}</p>
-                    <div className="flex items-center gap-1.5">
-                      <div className={cn("w-2 h-2 rounded-full",
-                        role.id === "ceo" ? "bg-blue-500" :
-                        role.id === "finance" ? "bg-emerald-500" :
-                        role.id === "pm" ? "bg-purple-500" :
-                        role.id === "construction" ? "bg-orange-500" :
-                        role.id === "worker" ? "bg-gray-500" :
-                        "bg-green-500"
-                      )} />
-                      <span className="text-[10px] text-muted-foreground">Example: {role.user}</span>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
 
             {/* Add Role Dialog */}
@@ -522,6 +623,90 @@ export function Administration({ }: AdminProps) {
                   <Button variant="outline" size="sm" onClick={() => setDeleteRoleDialog(null)}>Cancel</Button>
                   <Button size="sm" variant="destructive" onClick={handleDeleteRole}>Delete</Button>
                 </DialogFooter>
+              </DialogContent>
+            </Dialog>
+
+            {/* Permission Editor Dialog */}
+            <Dialog open={!!editingPermissions} onOpenChange={(open) => { if (!open) { setEditingPermissions(null); setPermissionForm(null); } }}>
+              <DialogContent className="sm:max-w-3xl max-h-[85vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2">
+                    <Shield className="w-5 h-5 text-primary" />
+                    Configure Permissions: {editingPermissions?.name}
+                  </DialogTitle>
+                  <DialogDescription>
+                    Set which modules and actions this role can access. Toggle permissions per module.
+                  </DialogDescription>
+                </DialogHeader>
+
+                {permissionForm && (
+                  <div className="space-y-4 py-2">
+                    <div className="p-3 rounded-lg border border-primary/20 bg-primary/5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className={cn("w-3 h-3 rounded-full", getRoleColorClass(permissionForm.id))} />
+                        <p className="text-sm font-semibold text-foreground">{permissionForm.name}</p>
+                        <Badge variant="outline" className="text-[10px] border-primary/30 text-primary">
+                          {permissionForm.permissions.filter(p => p.actions.includes("view")).length} modules
+                        </Badge>
+                      </div>
+                      <p className="text-xs text-muted-foreground">{permissionForm.description}</p>
+                    </div>
+
+                    {/* Permission Grid */}
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-2 pb-2 border-b border-border/40">
+                        <span className="text-xs font-semibold text-muted-foreground w-32">Module</span>
+                        <div className="flex-1 grid grid-cols-5 gap-2">
+                          {allActions.map(action => (
+                            <span key={action} className="text-[10px] font-semibold text-muted-foreground text-center uppercase">{action}</span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {allModules.map(module => {
+                        const hasView = hasPerm(module.id, "view");
+                        return (
+                          <div key={module.id} className={cn(
+                            "flex items-center gap-2 py-2 rounded-lg transition-colors",
+                            hasView ? "bg-card/60" : "opacity-50"
+                          )}>
+                            <div className="w-32 flex items-center gap-2 px-2">
+                              {hasView ? <Unlock className="w-3 h-3 text-emerald-400" /> : <Lock className="w-3 h-3 text-muted-foreground" />}
+                              <span className="text-xs font-medium text-foreground">{module.label}</span>
+                            </div>
+                            <div className="flex-1 grid grid-cols-5 gap-2">
+                              {allActions.map(action => (
+                                <div key={action} className="flex justify-center">
+                                  <Checkbox
+                                    checked={hasPerm(module.id, action)}
+                                    onCheckedChange={() => togglePermission(module.id, action)}
+                                    className={cn(
+                                      "border-border data-[state=checked]:bg-primary data-[state=checked]:border-primary",
+                                      action === "delete" && "data-[state=checked]:bg-red-500 data-[state=checked]:border-red-500"
+                                    )}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-border/40">
+                      <div className="text-xs text-muted-foreground">
+                        Total: {permissionForm.permissions.reduce((acc, p) => acc + p.actions.length, 0)} permission grants
+                      </div>
+                      <div className="flex gap-2">
+                        <Button variant="outline" size="sm" onClick={() => { setEditingPermissions(null); setPermissionForm(null); }}>Cancel</Button>
+                        <Button size="sm" onClick={savePermissions}>
+                          <CheckCircle className="w-3.5 h-3.5 mr-1" />
+                          Save Permissions
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </DialogContent>
             </Dialog>
           </div>
