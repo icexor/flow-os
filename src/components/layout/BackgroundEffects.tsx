@@ -22,71 +22,121 @@ export function BackgroundEffects() {
     resize();
     window.addEventListener("resize", resize);
 
-    interface Particle {
+    // Color palette - electric blue / cyan / teal
+    const COLORS = [
+      "100, 200, 255",
+      "80, 180, 240",
+      "60, 220, 220",
+      "100, 160, 255",
+      "140, 200, 255",
+    ];
+
+    interface Node {
       x: number;
       y: number;
       vx: number;
       vy: number;
       radius: number;
+      color: string;
       alpha: number;
       targetAlpha: number;
+      pulseSpeed: number;
+      pulsePhase: number;
+      connections: number;
     }
 
-    const particles: Particle[] = [];
-    const PARTICLE_COUNT = Math.min(80, Math.floor((w * h) / 25000));
+    const nodes: Node[] = [];
+    const NODE_COUNT = Math.min(120, Math.floor((w * h) / 18000));
 
-    for (let i = 0; i < PARTICLE_COUNT; i++) {
-      particles.push({
+    for (let i = 0; i < NODE_COUNT; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = Math.random() * 0.4 + 0.15;
+      nodes.push({
         x: Math.random() * w,
         y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 0.3,
-        vy: (Math.random() - 0.5) * 0.3,
-        radius: Math.random() * 2 + 0.5,
-        alpha: Math.random() * 0.3 + 0.1,
-        targetAlpha: Math.random() * 0.3 + 0.1,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius: Math.random() * 2.5 + 0.8,
+        color: COLORS[Math.floor(Math.random() * COLORS.length)],
+        alpha: Math.random() * 0.5 + 0.15,
+        targetAlpha: Math.random() * 0.5 + 0.15,
+        pulseSpeed: Math.random() * 0.02 + 0.005,
+        pulsePhase: Math.random() * Math.PI * 2,
+        connections: 0,
       });
     }
-
-    const isDark = document.documentElement.classList.contains("dark");
-    const primaryColor = isDark ? "100, 180, 255" : "60, 130, 220";
 
     const draw = () => {
       ctx.clearRect(0, 0, w, h);
 
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        p.x += p.vx;
-        p.y += p.vy;
+      // Draw connections first (behind nodes)
+      for (let i = 0; i < nodes.length; i++) {
+        const p = nodes[i];
+        p.connections = 0;
 
-        if (p.x < 0) p.x = w;
-        if (p.x > w) p.x = 0;
-        if (p.y < 0) p.y = h;
-        if (p.y > h) p.y = 0;
-
-        if (Math.random() < 0.01) {
-          p.targetAlpha = Math.random() * 0.3 + 0.1;
-        }
-        p.alpha += (p.targetAlpha - p.alpha) * 0.02;
-
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${primaryColor}, ${p.alpha})`;
-        ctx.fill();
-
-        for (let j = i + 1; j < particles.length; j++) {
-          const q = particles[j];
+        for (let j = i + 1; j < nodes.length; j++) {
+          const q = nodes[j];
           const dx = p.x - q.x;
           const dy = p.y - q.y;
           const dist = Math.sqrt(dx * dx + dy * dy);
-          if (dist < 150) {
+          if (dist < 180 && p.connections < 4) {
+            p.connections++;
+            const alpha = 0.12 * (1 - dist / 180);
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(q.x, q.y);
-            ctx.strokeStyle = `rgba(${primaryColor}, ${0.08 * (1 - dist / 150)})`;
-            ctx.lineWidth = 0.5;
+            ctx.strokeStyle = `rgba(${p.color}, ${alpha})`;
+            ctx.lineWidth = 0.6;
             ctx.stroke();
           }
         }
+      }
+
+      // Draw nodes
+      for (let i = 0; i < nodes.length; i++) {
+        const p = nodes[i];
+        p.x += p.vx;
+        p.y += p.vy;
+
+        // Wrap around
+        if (p.x < -10) p.x = w + 10;
+        if (p.x > w + 10) p.x = -10;
+        if (p.y < -10) p.y = h + 10;
+        if (p.y > h + 10) p.y = -10;
+
+        // Pulse alpha
+        p.pulsePhase += p.pulseSpeed;
+        const pulseAlpha = p.alpha + Math.sin(p.pulsePhase) * 0.15;
+        const clampedAlpha = Math.max(0.05, Math.min(0.7, pulseAlpha));
+
+        // Glow
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius * 3, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color}, ${clampedAlpha * 0.15})`;
+        ctx.fill();
+
+        // Core
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(${p.color}, ${clampedAlpha})`;
+        ctx.fill();
+      }
+
+      // Draw subtle grid lines
+      ctx.strokeStyle = "rgba(100, 180, 255, 0.02)";
+      ctx.lineWidth = 0.5;
+      const gridSize = 80;
+      for (let x = 0; x < w; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, h);
+        ctx.stroke();
+      }
+      for (let y = 0; y < h; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(w, y);
+        ctx.stroke();
       }
 
       animationId = requestAnimationFrame(draw);
@@ -104,7 +154,7 @@ export function BackgroundEffects() {
     <canvas
       ref={canvasRef}
       className="fixed inset-0 z-0 pointer-events-none"
-      style={{ opacity: 0.6 }}
+      style={{ opacity: 0.8 }}
     />
   );
 }
