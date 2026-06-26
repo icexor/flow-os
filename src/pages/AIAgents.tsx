@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ interface AIAgentsProps {
 }
 
 export function AIAgents({ onNavigate }: AIAgentsProps) {
+  const isMobile = useIsMobile();
   const [selectedAgent, setSelectedAgent] = useState<typeof aiAgents[0] | null>(null);
 
   const historyLogs = [
@@ -40,19 +42,19 @@ export function AIAgents({ onNavigate }: AIAgentsProps) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-foreground">AI Agents</h2>
           <p className="text-xs text-muted-foreground">6 specialized agents · All running 24/7 · Human oversight enabled</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8"><Settings className="w-3 h-3" />Configure</Button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8"><Settings className="w-3 h-3" /><span className="hidden sm:inline">Configure</span></Button>
           <Button size="sm" className="gap-1.5 text-xs h-8"><Sparkles className="w-3 h-3" />Deploy Agent</Button>
         </div>
       </div>
 
       {/* Global Stats */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
           { label: "Tasks Completed Today", value: "3,834", sub: "Across all agents", color: "text-blue-400" },
           { label: "Pending Approvals", value: "7", sub: "Need human review", color: "text-orange-400" },
@@ -67,9 +69,9 @@ export function AIAgents({ onNavigate }: AIAgentsProps) {
         ))}
       </div>
 
-      <div className="flex gap-4">
+      <div className={cn("flex gap-4", isMobile ? "flex-col" : "flex-row")}>
         {/* Agent Cards */}
-        <div className="flex-1 grid grid-cols-2 gap-3">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {aiAgents.map(agent => {
             const colors = agentColorMap[agent.color] || agentColorMap.blue;
             const isSelected = selectedAgent?.id === agent.id;
@@ -133,7 +135,7 @@ export function AIAgents({ onNavigate }: AIAgentsProps) {
         </div>
 
         {/* Agent Detail / Activity Feed */}
-        <div className="w-72 flex-shrink-0 space-y-3">
+        <div className={cn("space-y-3", isMobile ? "w-full" : "w-72 flex-shrink-0")}>
           {selectedAgent ? (
             <Card className="glass-subtle border-border/60">
               <CardContent className="p-4 space-y-3">

@@ -5,7 +5,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -15,14 +14,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import {
   Shield, Users, Key, AlertTriangle, CheckCircle,
   Plus, Edit, Trash2,
   Globe, Bell, Activity,
-  MoreHorizontal, User, Lock, Unlock, ChevronRight, Eye
+  MoreHorizontal, User, Lock, Unlock, ChevronRight, Eye, Menu
 } from "lucide-react";
 import { roles as initialRoles, approvalQueue } from "@/lib/data";
 import { defaultRolePermissions, allModules, allActions, type PermissionModule, type PermissionAction, type RolePermissions } from "@/lib/permissions";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const adminSections = [
   { id: "approvals", label: "Approval Queue", icon: CheckCircle, badge: 7, color: "text-orange-400" },
@@ -71,7 +72,9 @@ interface AdminProps {
 }
 
 export function Administration({ }: AdminProps) {
-  const [activeSection, setActiveSection] = useState("roles");
+  const isMobile = useIsMobile();
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState("approvals");
   const [approvalFilter, setApprovalFilter] = useState("waiting");
   const [approvedItems, setApprovedItems] = useState<Set<string>>(new Set());
   const [rejectedItems, setRejectedItems] = useState<Set<string>>(new Set());
@@ -91,6 +94,39 @@ export function Administration({ }: AdminProps) {
   // Confirmation dialog state
   const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; type: "approve" | "reject"; itemId: string | null }>({ open: false, type: "approve", itemId: null });
   const [rejectReason, setRejectReason] = useState("");
+
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section);
+    setMobileNavOpen(false);
+  };
+
+  const AdminNav = () => (
+    <>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Admin Sections</p>
+      <div className="space-y-1">
+        {adminSections.map(section => (
+          <button
+            key={section.id}
+            onClick={() => handleSectionChange(section.id)}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all text-left",
+              activeSection === section.id
+                ? "bg-primary/15 text-primary border border-primary/20"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
+            )}
+          >
+            <section.icon className={cn("w-4 h-4", activeSection === section.id ? "text-primary" : section.color)} />
+            <span className="flex-1 font-medium">{section.label}</span>
+            {section.badge && (
+              <span className="bg-orange-500/20 text-orange-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
+                {section.badge}
+              </span>
+            )}
+          </button>
+        ))}
+      </div>
+    </>
+  );
 
   const approvalFilters = [
     { id: "waiting", label: "Waiting", count: approvalQueue.filter(a => !approvedItems.has(a.id) && !rejectedItems.has(a.id)).length },
@@ -213,35 +249,34 @@ export function Administration({ }: AdminProps) {
 
   return (
     <div className="flex gap-4">
-      {/* Left Nav */}
-      <div className="w-52 flex-shrink-0">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Admin Sections</p>
-        <div className="space-y-1">
-          {adminSections.map(section => (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              className={cn(
-                "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all text-left",
-                activeSection === section.id
-                  ? "bg-primary/15 text-primary border border-primary/20"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground border border-transparent"
-              )}
-            >
-              <section.icon className={cn("w-4 h-4", activeSection === section.id ? "text-primary" : section.color)} />
-              <span className="flex-1 font-medium">{section.label}</span>
-              {section.badge && (
-                <span className="bg-orange-500/20 text-orange-400 text-[9px] font-bold px-1.5 py-0.5 rounded-full">
-                  {section.badge}
-                </span>
-              )}
-            </button>
-          ))}
+      {/* Left Nav - Desktop */}
+      {!isMobile && (
+        <div className="w-52 flex-shrink-0">
+          <AdminNav />
         </div>
-      </div>
+      )}
+
+      {/* Left Nav - Mobile Sheet */}
+      {isMobile && (
+        <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <SheetContent side="left" className="w-64 p-4">
+            <AdminNav />
+          </SheetContent>
+        </Sheet>
+      )}
 
       {/* Content */}
-      <div className="flex-1 space-y-4">
+      <div className="flex-1 min-w-0 space-y-4">
+        {isMobile && (
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setMobileNavOpen(true)}>
+              <Menu className="w-4 h-4" />
+            </Button>
+            <span className="text-sm font-semibold text-foreground">
+              {adminSections.find(s => s.id === activeSection)?.label}
+            </span>
+          </div>
+        )}
         {activeSection === "approvals" && (
           <>
             <div className="flex items-center justify-between">
@@ -334,7 +369,7 @@ export function Administration({ }: AdminProps) {
                     )}
 
                     {!approvedItems.has(item.id) && !rejectedItems.has(item.id) && (
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <Button
                           size="sm"
                           className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white"
@@ -439,7 +474,7 @@ export function Administration({ }: AdminProps) {
               <h2 className="text-lg font-bold text-foreground">User Management</h2>
               <Button size="sm" className="gap-1.5 text-xs"><Plus className="w-3.5 h-3.5" />Invite User</Button>
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
               {["Arjay Delos Santos (CEO)", "Patricia Wells (CFO)", "Carlos Rivera (PM)", "Sofia Nguyen (PM)", "Robert Chen (CM)", "Diana Walsh (Safety)", "Jenny Park (PM)", "Mike Thompson (Procurement)", "Marcus Webb (PM)", "David Kim (Customer)", "Sarah Chen (Customer)", "James Cooper (Worker)"].map((user, i) => (
                 <div key={i} className="p-3 rounded-lg border border-border/60 bg-card hover:border-border transition-all dark-glow">
                   <div className="flex items-center gap-2.5">
@@ -471,7 +506,7 @@ export function Administration({ }: AdminProps) {
             </div>
 
             {/* Role Cards */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {roles.map(role => {
                 const rolePerm = defaultRolePermissions.find(r => r.id === role.id);
                 const moduleCount = rolePerm?.permissions.filter(p => p.actions.includes("view")).length || 0;
@@ -747,7 +782,7 @@ export function Administration({ }: AdminProps) {
               <h2 className="text-lg font-bold text-foreground">Integrations</h2>
               <Button size="sm" className="gap-1.5 text-xs"><Plus className="w-3.5 h-3.5" />Connect New</Button>
             </div>
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
               {integrations.map(int => (
                 <div key={int.name} className="p-3 rounded-lg border border-border/60 bg-card hover:border-border transition-all dark-glow">
                   <div className="flex items-center gap-2 mb-2">
