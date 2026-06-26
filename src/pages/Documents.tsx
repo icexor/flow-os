@@ -72,28 +72,28 @@ export function Documents({ }: DocumentsProps) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-foreground">Documents</h2>
           <p className="text-xs text-muted-foreground">{allDocs.length} documents · AI processed with OCR · Smart tagging active</p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8">
-            <Upload className="w-3 h-3" /> Upload
+            <Upload className="w-3 h-3" /> <span className="hidden sm:inline">Upload</span>
           </Button>
           <Button size="sm" className="gap-1.5 text-xs h-8">
-            <Plus className="w-3.5 h-3.5" /> New Document
+            <Plus className="w-3.5 h-3.5" /> <span className="hidden sm:inline">New</span>
           </Button>
         </div>
       </div>
 
       {/* Search + Filter */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="relative w-full sm:max-w-xs">
           <Search className="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-muted-foreground" />
           <Input placeholder="Search documents..." value={search} onChange={e => setSearch(e.target.value)} className="pl-8 h-8 text-xs" />
         </div>
-        <div className="flex gap-1 overflow-x-auto scrollbar-hide">
+        <div className="flex gap-1 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {categories.map(cat => (
             <button
               key={cat}
@@ -109,9 +109,9 @@ export function Documents({ }: DocumentsProps) {
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-col lg:flex-row">
         {/* Document Grid */}
-        <div className={cn("grid gap-3 flex-1", selectedDoc ? "grid-cols-2" : "grid-cols-3")}>
+        <div className={cn("grid gap-3 flex-1", selectedDoc ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3")}>
           {filtered.map(doc => {
             const Icon = docTypeIcon[doc.type as keyof typeof docTypeIcon] || FileText;
             const status = statusConfig[doc.status as keyof typeof statusConfig];
@@ -121,28 +121,28 @@ export function Documents({ }: DocumentsProps) {
                 key={doc.id}
                 onClick={() => setSelectedDoc(doc)}
                 className={cn(
-                  "p-4 rounded-lg border cursor-pointer transition-all",
+                  "p-3 md:p-4 rounded-lg border cursor-pointer transition-all",
                   selectedDoc?.id === doc.id
                     ? "border-primary/40 bg-primary/8"
                     : "border-border/60 bg-card hover:border-border hover:bg-muted"
                 )}
               >
                 <div className="flex items-start gap-3 mb-3">
-                  <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0", docTypeColor[doc.type as keyof typeof docTypeColor] || "bg-muted text-muted-foreground")}>
-                    <Icon className="w-5 h-5" />
+                  <div className={cn("w-9 h-9 md:w-10 md:h-10 rounded-lg flex items-center justify-center flex-shrink-0", docTypeColor[doc.type as keyof typeof docTypeColor] || "bg-muted text-muted-foreground")}>
+                    <Icon className="w-4 h-4 md:w-5 md:h-5" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-xs font-medium text-foreground line-clamp-2">{doc.name}</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5">{doc.size} · {doc.uploadedAt}</p>
                   </div>
-                  <button className="text-muted-foreground hover:text-foreground" onClick={e => e.stopPropagation()}>
+                  <button className="text-muted-foreground hover:text-foreground hidden sm:block" onClick={e => e.stopPropagation()}>
                     <MoreHorizontal className="w-3.5 h-3.5" />
                   </button>
                 </div>
 
                 <p className="text-[10px] text-muted-foreground line-clamp-2 mb-2">{doc.aiSummary}</p>
 
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-1">
                   <Badge className={cn("text-[9px] h-4 px-1 border", status?.badge || "bg-muted text-muted-foreground")}>
                     <StatusIcon className="w-2.5 h-2.5 mr-1" />
                     {doc.status}
@@ -153,22 +153,22 @@ export function Documents({ }: DocumentsProps) {
                     ))}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-0.5"><User className="w-2.5 h-2.5" />{doc.uploadedBy}</span>
-                  <span className="flex items-center gap-0.5"><FolderKanban className="w-2.5 h-2.5" />{doc.project.substring(0, 20)}...</span>
+                <div className="flex items-center gap-2 mt-2 text-[10px] text-muted-foreground flex-wrap">
+                  <span className="flex items-center gap-0.5 truncate"><User className="w-2.5 h-2.5 flex-shrink-0" />{doc.uploadedBy}</span>
+                  <span className="flex items-center gap-0.5 truncate hidden sm:flex"><FolderKanban className="w-2.5 h-2.5 flex-shrink-0" />{doc.project.substring(0, 15)}...</span>
                 </div>
               </div>
             );
           })}
         </div>
 
-        {/* Document Detail Panel */}
+        {/* Document Detail Panel - Desktop */}
         {selectedDoc && (
-          <Card className="w-72 flex-shrink-0 glass-subtle border-border/60 flex flex-col h-fit">
+          <Card className="w-full lg:w-72 flex-shrink-0 glass-subtle border-border/60 flex flex-col h-fit hidden lg:flex">
             <CardHeader className="pb-2 pt-4 px-4">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold text-foreground">Document Preview</CardTitle>
-                <button onClick={() => setSelectedDoc(null)} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
+                <button onClick={() => setSelectedDoc(null)} className="text-muted-foreground hover:text-foreground text-xs">X</button>
               </div>
             </CardHeader>
             <CardContent className="px-4 pb-4 space-y-3">
@@ -199,7 +199,7 @@ export function Documents({ }: DocumentsProps) {
                 ].map(m => (
                   <div key={m.label} className="flex justify-between">
                     <span className="text-[10px] text-muted-foreground">{m.label}</span>
-                    <span className="text-[10px] font-medium text-foreground text-right">{m.value}</span>
+                    <span className="text-[10px] font-medium text-foreground text-right truncate ml-2">{m.value}</span>
                   </div>
                 ))}
               </div>

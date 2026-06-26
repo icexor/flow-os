@@ -59,31 +59,31 @@ export function Media({ }: MediaProps) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-foreground">Media Center</h2>
           <p className="text-xs text-muted-foreground">847 photos · 23 videos · 12 drone files · AI analysis active</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8"><Upload className="w-3 h-3" />Upload</Button>
-          <Button size="sm" className="gap-1.5 text-xs h-8"><Sparkles className="w-3 h-3" />AI Analysis</Button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8"><Upload className="w-3 h-3" /><span className="hidden sm:inline">Upload</span></Button>
+          <Button size="sm" className="gap-1.5 text-xs h-8"><Sparkles className="w-3 h-3" /><span className="hidden sm:inline">AI Analysis</span></Button>
         </div>
       </div>
 
       {/* AI Capabilities */}
       <Card className="glass-subtle border-border/60">
-        <CardContent className="p-4">
+        <CardContent className="p-3 md:p-4">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-primary" />
             <span className="text-xs font-semibold text-foreground">AI Visual Intelligence</span>
             <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Active</Badge>
           </div>
-          <div className="grid grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-2">
             {aiCapabilities.map(cap => (
               <div key={cap.name} className={cn("p-2.5 rounded-lg border text-center", cap.active ? "border-primary/20 bg-primary/5" : "border-border/40 bg-muted opacity-60")}>
                 <div className={cn("w-2 h-2 rounded-full mx-auto mb-1.5", cap.active ? "bg-emerald-500" : "bg-muted-foreground")} />
-                <p className="text-[10px] font-medium text-foreground">{cap.name}</p>
-                <p className="text-[9px] text-muted-foreground">{cap.desc}</p>
+                <p className="text-[10px] font-medium text-foreground truncate">{cap.name}</p>
+                <p className="text-[9px] text-muted-foreground truncate">{cap.desc}</p>
               </div>
             ))}
           </div>
@@ -92,27 +92,27 @@ export function Media({ }: MediaProps) {
 
       {/* Alert Banner */}
       {mediaItems.some(m => m.flagged) && (
-        <div className="flex items-center gap-3 p-3 rounded-lg border border-red-500/30 bg-red-500/10">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg border border-red-500/30 bg-red-500/10">
           <AlertTriangle className="w-4 h-4 text-red-400 flex-shrink-0" />
-          <p className="text-sm text-foreground">
+          <p className="text-sm text-foreground flex-1">
             <span className="font-semibold text-red-400">AI Alert: </span>
             2 media items flagged for review — potential structural issue at Marina Complex foundation.
           </p>
-          <Button size="sm" variant="outline" className="ml-auto text-xs h-7 border-red-500/30 text-red-400 hover:bg-red-500/10 flex-shrink-0">
+          <Button size="sm" variant="outline" className="text-xs h-7 border-red-500/30 text-red-400 hover:bg-red-500/10 flex-shrink-0">
             Review
           </Button>
         </div>
       )}
 
       {/* Filter + Grid */}
-      <div className="flex items-center gap-3">
-        <div className="flex gap-1">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+        <div className="flex gap-1 overflow-x-auto scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
           {filters.map(f => (
             <button
               key={f.id}
               onClick={() => setActiveFilter(f.id)}
               className={cn(
-                "text-[11px] px-2.5 py-1 rounded-md transition-all",
+                "flex-shrink-0 text-[11px] px-2.5 py-1 rounded-md transition-all",
                 activeFilter === f.id ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground hover:text-foreground"
               )}
             >
@@ -120,14 +120,14 @@ export function Media({ }: MediaProps) {
             </button>
           ))}
         </div>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2 hidden sm:flex">
           <Button variant="ghost" size="sm" className="h-7 text-xs gap-1"><Grid3X3 className="w-3 h-3" />Grid</Button>
         </div>
       </div>
 
-      <div className="flex gap-4">
+      <div className="flex gap-4 flex-col lg:flex-row">
         {/* Media Grid */}
-        <div className="flex-1 grid grid-cols-3 gap-3">
+        <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map(media => (
             <div
               key={media.id}
@@ -169,10 +169,10 @@ export function Media({ }: MediaProps) {
 
               <div className="p-2.5">
                 <p className="text-[11px] font-medium text-foreground line-clamp-1">{media.title}</p>
-                <p className="text-[10px] text-muted-foreground">{media.project.substring(0, 25)}...</p>
-                <div className="flex items-center gap-1 mt-1.5">
+                <p className="text-[10px] text-muted-foreground truncate">{media.project.substring(0, 25)}...</p>
+                <div className="flex items-center gap-1 mt-1.5 flex-wrap">
                   {media.aiTags.slice(0, 2).map(tag => (
-                    <Badge key={tag} className={cn("text-[8px] h-3.5 px-1 border-0", media.flagged && tag.includes("crack") || tag.includes("missing") ? "bg-red-500/20 text-red-400" : "bg-primary/15 text-primary")}>
+                    <Badge key={tag} className={cn("text-[8px] h-3.5 px-1 border-0", media.flagged && (tag.includes("crack") || tag.includes("missing")) ? "bg-red-500/20 text-red-400" : "bg-primary/15 text-primary")}>
                       {tag}
                     </Badge>
                   ))}
@@ -186,13 +186,13 @@ export function Media({ }: MediaProps) {
           ))}
         </div>
 
-        {/* Detail Panel */}
+        {/* Detail Panel - Desktop */}
         {selectedMedia && (
-          <Card className="w-64 flex-shrink-0 glass-subtle border-border/60">
+          <Card className="w-full lg:w-64 flex-shrink-0 glass-subtle border-border/60 hidden lg:block">
             <CardContent className="p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-foreground">Details</span>
-                <button onClick={() => setSelectedMedia(null)} className="text-muted-foreground hover:text-foreground text-xs">✕</button>
+                <button onClick={() => setSelectedMedia(null)} className="text-muted-foreground hover:text-foreground text-xs">X</button>
               </div>
 
               <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
@@ -200,8 +200,8 @@ export function Media({ }: MediaProps) {
               </div>
 
               <div>
-                <p className="text-xs font-medium text-foreground">{selectedMedia.title}</p>
-                <p className="text-[10px] text-muted-foreground mt-0.5">{selectedMedia.project}</p>
+                <p className="text-xs font-medium text-foreground line-clamp-1">{selectedMedia.title}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5 truncate">{selectedMedia.project}</p>
               </div>
 
               <div className="p-3 rounded-lg border border-primary/20 bg-primary/5">

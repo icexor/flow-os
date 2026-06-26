@@ -21,6 +21,8 @@ import { BusinessIntelligence } from "@/pages/BusinessIntelligence";
 import { useAppearance } from "@/hooks/use-appearance";
 import { useAuth } from "@/lib/auth-context";
 import { BackgroundEffects } from "@/components/layout/BackgroundEffects";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 type Page =
   | "dashboard" | "inbox" | "customers" | "projects" | "tasks"
@@ -32,7 +34,9 @@ export function App() {
   const { isLoggedIn, login, logout, allowedModules } = useAuth();
   const [currentPage, setCurrentPage] = useState<Page>("dashboard");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const appearance = useAppearance();
+  const isMobile = useIsMobile();
 
   const handleLogin = (role: string) => {
     login(role);
@@ -41,7 +45,10 @@ export function App() {
 
   const handleNavigate = (page: string) => {
     setCurrentPage(page as Page);
+    setMobileMenuOpen(false);
   };
+
+  const toggleMobileMenu = () => setMobileMenuOpen(!mobileMenuOpen);
 
   if (!isLoggedIn) {
     return (
@@ -85,25 +92,44 @@ export function App() {
   return (
     <div className="min-h-screen bg-background relative">
       <BackgroundEffects />
-      <AppSidebar
-        currentPage={currentPage}
-        onNavigate={handleNavigate}
-        collapsed={sidebarCollapsed}
-        onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
-        onLogout={logout}
-        allowedModules={allowedModules}
-      />
+
+      {/* Desktop Sidebar */}
+      <div className="hidden lg:block">
+        <AppSidebar
+          currentPage={currentPage}
+          onNavigate={handleNavigate}
+          collapsed={sidebarCollapsed}
+          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onLogout={logout}
+          allowedModules={allowedModules}
+        />
+      </div>
+
+      {/* Mobile Sidebar (Sheet) */}
+      <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+        <SheetContent side="left" className="w-72 p-0 bg-sidebar border-sidebar-border">
+          <AppSidebar
+            currentPage={currentPage}
+            onNavigate={handleNavigate}
+            collapsed={false}
+            onToggle={() => setMobileMenuOpen(false)}
+            onLogout={logout}
+            allowedModules={allowedModules}
+          />
+        </SheetContent>
+      </Sheet>
+
       <Topbar
         currentPage={currentPage}
         onNavigate={handleNavigate}
         sidebarCollapsed={sidebarCollapsed}
-
+        onMobileMenuToggle={toggleMobileMenu}
       />
       <main className={cn(
         "min-h-screen pt-16 transition-all duration-300 relative z-10",
-        sidebarCollapsed ? "pl-16" : "pl-60"
+        !isMobile && (sidebarCollapsed ? "lg:pl-16" : "lg:pl-60")
       )}>
-        <div className="p-6 max-w-[1400px]">
+        <div className="p-4 md:p-6 max-w-[1400px]">
           {renderPage()}
         </div>
       </main>

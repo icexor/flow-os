@@ -61,19 +61,19 @@ export function Finance({ }: FinanceProps) {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-bold text-foreground">Finance</h2>
           <p className="text-xs text-muted-foreground">Real-time financial intelligence · AI-powered forecasting</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8"><Download className="w-3 h-3" />Export</Button>
-          <Button size="sm" className="gap-1.5 text-xs h-8"><Plus className="w-3.5 h-3.5" />New Invoice</Button>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <Button variant="outline" size="sm" className="gap-1.5 text-xs h-8"><Download className="w-3 h-3" /><span className="hidden sm:inline">Export</span></Button>
+          <Button size="sm" className="gap-1.5 text-xs h-8"><Plus className="w-3.5 h-3.5" /><span className="hidden sm:inline">New Invoice</span></Button>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-border/60 overflow-x-auto scrollbar-hide">
+      <div className="flex gap-1 border-b border-border/60 overflow-x-auto scrollbar-hide -mx-4 px-4 md:mx-0 md:px-0">
         {tabs.map(tab => (
           <button
             key={tab}
@@ -91,7 +91,7 @@ export function Finance({ }: FinanceProps) {
       {activeTab === "Overview" && (
         <div className="space-y-4">
           {/* KPI Row */}
-          <div className="grid grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             {[
               { label: "Monthly Revenue", value: "$4.28M", change: "+12.4%", positive: true, icon: TrendingUp, color: "text-blue-400 bg-blue-500/15" },
               { label: "Monthly Expenses", value: "$2.94M", change: "+3.2%", positive: false, icon: ArrowDownRight, color: "text-red-400 bg-red-500/15" },
@@ -99,29 +99,29 @@ export function Finance({ }: FinanceProps) {
               { label: "Cash Balance", value: "$3.12M", change: "-2.1%", positive: false, icon: Building, color: "text-purple-400 bg-purple-500/15" },
             ].map(kpi => (
               <Card key={kpi.label} className="glass-subtle border-border/60">
-                <CardContent className="p-4">
+                <CardContent className="p-3 md:p-4">
                   <div className="flex items-center justify-between mb-2">
-                    <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center", kpi.color.split(" ")[1])}>
-                      <kpi.icon className={cn("w-4 h-4", kpi.color.split(" ")[0])} />
+                    <div className={cn("w-7 h-7 md:w-8 md:h-8 rounded-lg flex items-center justify-center", kpi.color.split(" ")[1])}>
+                      <kpi.icon className={cn("w-3.5 h-3.5 md:w-4 md:h-4", kpi.color.split(" ")[0])} />
                     </div>
                     <span className={cn("text-xs font-medium", kpi.positive ? "text-emerald-400" : "text-red-400")}>
                       {kpi.change}
                     </span>
                   </div>
-                  <p className="text-xl font-bold text-foreground">{kpi.value}</p>
-                  <p className="text-xs text-muted-foreground">{kpi.label}</p>
+                  <p className="text-base md:text-xl font-bold text-foreground">{kpi.value}</p>
+                  <p className="text-xs text-muted-foreground truncate">{kpi.label}</p>
                 </CardContent>
               </Card>
             ))}
           </div>
 
           {/* Charts Row */}
-          <div className="grid grid-cols-3 gap-4">
-            <Card className="col-span-2 glass-subtle border-border/60">
-              <CardHeader className="pb-2 pt-4 px-5">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card className="col-span-1 lg:col-span-2 glass-subtle border-border/60">
+              <CardHeader className="pb-2 pt-4 px-4 md:px-5">
                 <CardTitle className="text-sm font-semibold text-foreground">Revenue & Expenses Trend</CardTitle>
               </CardHeader>
-              <CardContent className="px-5 pb-4">
+              <CardContent className="px-4 md:px-5 pb-4">
                 <ChartContainer config={revenueConfig} className="h-44">
                   <BarChart data={revenueData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -151,7 +151,7 @@ export function Finance({ }: FinanceProps) {
                   {expenseData.map((e, i) => (
                     <div key={e.category} className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ background: PIE_COLORS[i] }} />
-                      <span className="text-[10px] text-muted-foreground flex-1">{e.category}</span>
+                      <span className="text-[10px] text-muted-foreground flex-1 truncate">{e.category}</span>
                       <span className="text-[10px] font-medium text-foreground">{e.pct}%</span>
                     </div>
                   ))}
@@ -162,16 +162,16 @@ export function Finance({ }: FinanceProps) {
 
           {/* Cash Flow */}
           <Card className="glass-subtle border-border/60">
-            <CardHeader className="pb-2 pt-4 px-5">
-              <div className="flex items-center justify-between">
+            <CardHeader className="pb-2 pt-4 px-4 md:px-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                 <CardTitle className="text-sm font-semibold text-foreground">Cash Flow - Current Month</CardTitle>
-                <div className="flex items-center gap-1 text-xs">
+                <div className="flex items-center gap-1 text-xs flex-wrap">
                   <span className="flex items-center gap-1 text-emerald-400"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />Inflow</span>
                   <span className="ml-2 flex items-center gap-1 text-red-400"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />Outflow</span>
                 </div>
               </div>
             </CardHeader>
-            <CardContent className="px-5 pb-4">
+            <CardContent className="px-4 md:px-5 pb-4">
               <ChartContainer config={cashConfig} className="h-32">
                 <BarChart data={cashFlowData} margin={{ top: 0, right: 0, left: -20, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
@@ -189,31 +189,31 @@ export function Finance({ }: FinanceProps) {
 
       {activeTab === "Invoices" && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex gap-4 text-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex gap-2 sm:gap-4 text-xs flex-wrap">
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500" />Paid: $1.66M</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500" />Outstanding: $1.52M</span>
               <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500" />Overdue: $340K</span>
             </div>
-            <Button size="sm" className="gap-1.5 text-xs h-7"><Plus className="w-3 h-3" />New Invoice</Button>
+            <Button size="sm" className="gap-1.5 text-xs h-7 flex-shrink-0"><Plus className="w-3 h-3" />New Invoice</Button>
           </div>
-          <Card className="glass-subtle border-border/60">
-            <CardContent className="p-0">
-              <table className="w-full">
+          <Card className="glass-subtle border-border/60 overflow-hidden">
+            <CardContent className="p-0 overflow-x-auto">
+              <table className="w-full min-w-[600px]">
                 <thead>
                   <tr className="border-b border-border/60">
                     {["Invoice #", "Customer", "Amount", "Due Date", "Status", "Actions"].map(h => (
-                      <th key={h} className="text-left p-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">{h}</th>
+                      <th key={h} className="text-left p-3 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {finances.invoices.map(inv => (
                     <tr key={inv.id} className="border-b border-border/40 hover:bg-muted transition-colors">
-                      <td className="p-3 text-xs font-medium text-primary">{inv.number}</td>
-                      <td className="p-3 text-xs text-foreground">{inv.customer}</td>
-                      <td className="p-3 text-xs font-semibold text-foreground">{formatCurrency(inv.amount)}</td>
-                      <td className="p-3 text-xs text-muted-foreground">{inv.dueDate}</td>
+                      <td className="p-3 text-xs font-medium text-primary whitespace-nowrap">{inv.number}</td>
+                      <td className="p-3 text-xs text-foreground truncate max-w-[150px]">{inv.customer}</td>
+                      <td className="p-3 text-xs font-semibold text-foreground whitespace-nowrap">{formatCurrency(inv.amount)}</td>
+                      <td className="p-3 text-xs text-muted-foreground whitespace-nowrap">{inv.dueDate}</td>
                       <td className="p-3">
                         <Badge className={cn("text-[9px] border", invoiceStatus[inv.status as keyof typeof invoiceStatus]?.badge)}>
                           {inv.status}
@@ -222,7 +222,7 @@ export function Finance({ }: FinanceProps) {
                       <td className="p-3">
                         <div className="flex items-center gap-1">
                           <Button variant="ghost" size="sm" className="h-6 w-6 p-0"><Eye className="w-3 h-3" /></Button>
-                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0"><Send className="w-3 h-3" /></Button>
+                          <Button variant="ghost" size="sm" className="h-6 w-6 p-0 hidden sm:flex"><Send className="w-3 h-3" /></Button>
                           {inv.status === "overdue" && (
                             <Button size="sm" className="h-6 text-[10px] px-2 bg-red-600 hover:bg-red-700 text-white">Collect</Button>
                           )}
@@ -244,17 +244,17 @@ export function Finance({ }: FinanceProps) {
             const isOverrun = pct > 85;
             return (
               <Card key={budget.project} className="glass-subtle border-border/60">
-                <CardContent className="p-4">
-                  <div className="flex items-start justify-between mb-3">
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{budget.project}</p>
-                      <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5">
+                <CardContent className="p-3 md:p-4">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between mb-3 gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold text-foreground truncate">{budget.project}</p>
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs text-muted-foreground mt-0.5">
                         <span>Total: {formatCurrency(budget.total)}</span>
                         <span>Spent: {formatCurrency(budget.spent)}</span>
-                        <span>Committed: {formatCurrency(budget.committed)}</span>
+                        <span className="hidden sm:inline">Committed: {formatCurrency(budget.committed)}</span>
                       </div>
                     </div>
-                    <div className="text-right">
+                    <div className="text-left sm:text-right flex-shrink-0">
                       <p className={cn("text-sm font-bold", isOverrun ? "text-orange-400" : "text-emerald-400")}>
                         {pct}% used
                       </p>

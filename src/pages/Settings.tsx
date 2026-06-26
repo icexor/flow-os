@@ -7,10 +7,12 @@ import { Switch } from "@/components/ui/switch";
 import {
   Settings as SettingsIcon, User, Bell, Shield, Palette, Globe,
   Key, Database, Zap, Check, Moon, Sun,
-  Building, Save
+  Building, Save, ChevronLeft
 } from "lucide-react";
 import type { ThemeMode, AccentColor } from "@/hooks/use-appearance";
 import { useAuth } from "@/lib/auth-context";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 const settingsSections = [
   { id: "profile", label: "Profile", icon: User },
@@ -42,6 +44,8 @@ interface SettingsProps {
 export function Settings({ themeMode = "dark", accentColor = "electric-blue", onChangeTheme, onChangeAccent }: SettingsProps) {
   const { roleData } = useAuth();
   const [activeSection, setActiveSection] = useState("profile");
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const isMobile = useIsMobile();
   const [notifications, setNotifications] = useState({
     emailAlerts: true,
     pushNotifications: true,
@@ -61,32 +65,64 @@ export function Settings({ themeMode = "dark", accentColor = "electric-blue", on
     processingMode: "balanced",
   });
 
+  const handleSectionChange = (section: string) => {
+    setActiveSection(section);
+    setMobileNavOpen(false);
+  };
+
+  const SettingsNav = () => (
+    <>
+      <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Settings</p>
+      <div className="space-y-1">
+        {settingsSections.map(section => (
+          <button
+            key={section.id}
+            onClick={() => handleSectionChange(section.id)}
+            className={cn(
+              "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all text-left border",
+              activeSection === section.id
+                ? "bg-primary/15 text-primary border-primary/20"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
+            )}
+          >
+            <section.icon className="w-4 h-4" />
+            <span className="font-medium">{section.label}</span>
+          </button>
+        ))}
+      </div>
+    </>
+  );
+
   return (
     <div className="flex gap-4">
-      {/* Left Nav */}
-      <div className="w-52 flex-shrink-0">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Settings</p>
-        <div className="space-y-1">
-          {settingsSections.map(section => (
-            <button
-              key={section.id}
-              onClick={() => setActiveSection(section.id)}
-              className={cn(
-                "w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm transition-all text-left border",
-                activeSection === section.id
-                  ? "bg-primary/15 text-primary border-primary/20"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground border-transparent"
-              )}
-            >
-              <section.icon className="w-4 h-4" />
-              <span className="font-medium">{section.label}</span>
-            </button>
-          ))}
+      {/* Left Nav - Desktop */}
+      {!isMobile && (
+        <div className="w-52 flex-shrink-0">
+          <SettingsNav />
         </div>
-      </div>
+      )}
+
+      {/* Left Nav - Mobile Sheet */}
+      {isMobile && (
+        <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <SheetContent side="left" className="w-64 p-4">
+            <SettingsNav />
+          </SheetContent>
+        </Sheet>
+      )}
 
       {/* Content */}
       <Card className="flex-1 glass-subtle border-border/60">
+        {isMobile && (
+          <div className="p-3 border-b border-border/60 flex items-center gap-2">
+            <Button variant="ghost" size="icon" className="w-8 h-8" onClick={() => setMobileNavOpen(true)}>
+              <ChevronLeft className="w-4 h-4" />
+            </Button>
+            <span className="text-sm font-semibold text-foreground">
+              {settingsSections.find(s => s.id === activeSection)?.label}
+            </span>
+          </div>
+        )}
         <CardContent className="p-5">
           {activeSection === "profile" && (
             <div className="space-y-5">
@@ -104,7 +140,7 @@ export function Settings({ themeMode = "dark", accentColor = "electric-blue", on
                   <Button variant="outline" size="sm" className="mt-2 text-xs h-7">Change Photo</Button>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {[
                   { label: "Full Name", value: roleData?.user || "User" },
                   { label: "Job Title", value: roleData?.name || "User" },

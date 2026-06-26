@@ -81,21 +81,22 @@ export function Dashboard({ onNavigate }: DashboardProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">{greeting}</h1>
-          <p className="text-sm text-muted-foreground mt-0.5">
+          <h1 className="text-xl md:text-2xl font-bold text-foreground">{greeting}</h1>
+          <p className="text-xs md:text-sm text-muted-foreground mt-0.5">
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" })} · AI has 12 suggestions for you today
           </p>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-shrink-0">
           <Button variant="outline" size="sm" className="gap-2 text-xs">
             <RefreshCw className="w-3 h-3" />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </Button>
           <Button size="sm" className="gap-2 text-xs bg-primary hover:bg-primary/90" onClick={() => onNavigate("ai-agents")}>
             <Sparkles className="w-3 h-3" />
-            AI Suggestions (12)
+            <span className="hidden sm:inline">AI Suggestions (12)</span>
+            <span className="sm:hidden">AI (12)</span>
           </Button>
         </div>
       </div>
@@ -116,31 +117,35 @@ export function Dashboard({ onNavigate }: DashboardProps) {
 
       {/* Company Health Score */}
       <Card className="glass-subtle border-border/60 overflow-hidden dark-glow">
-        <CardContent className="p-5">
-          <div className="flex items-center gap-6">
-            <div className="relative w-20 h-20 flex-shrink-0">
-              <svg className="w-20 h-20 -rotate-90" viewBox="0 0 80 80">
-                <circle cx="40" cy="40" r="32" fill="none" stroke="var(--border)" strokeWidth="6" />
-                <circle
-                  cx="40" cy="40" r="32" fill="none"
-                  stroke="var(--primary)" strokeWidth="6"
-                  strokeLinecap="round"
-                  strokeDasharray={`${(87 / 100) * 201} 201`}
-                  className="transition-all duration-1000"
-                />
-              </svg>
-              <div className="absolute inset-0 flex flex-col items-center justify-center">
-                <span className="text-xl font-bold text-foreground">87</span>
-                <span className="text-[9px] text-muted-foreground">HEALTH</span>
+        <CardContent className="p-4 md:p-5">
+          <div className="flex flex-col lg:flex-row lg:items-center gap-6">
+            <div className="flex items-center gap-4 lg:gap-6">
+              <div className="relative w-16 h-16 md:w-20 md:h-20 flex-shrink-0 mx-auto lg:mx-0">
+                <svg className="w-16 h-16 md:w-20 md:h-20 -rotate-90" viewBox="0 0 80 80">
+                  <circle cx="40" cy="40" r="32" fill="none" stroke="var(--border)" strokeWidth="6" />
+                  <circle
+                    cx="40" cy="40" r="32" fill="none"
+                    stroke="var(--primary)" strokeWidth="6"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(87 / 100) * 201} 201`}
+                    className="transition-all duration-1000"
+                  />
+                </svg>
+                <div className="absolute inset-0 flex flex-col items-center justify-center">
+                  <span className="text-lg md:text-xl font-bold text-foreground">87</span>
+                  <span className="text-[8px] md:text-[9px] text-muted-foreground">HEALTH</span>
+                </div>
+              </div>
+              <div className="flex-1 text-center lg:text-left">
+                <div className="flex items-center gap-2 justify-center lg:justify-start mb-1">
+                  <h3 className="text-sm font-semibold text-foreground">Company Health Score</h3>
+                  <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Good</Badge>
+                </div>
+                <p className="text-xs text-muted-foreground hidden sm:block">Based on 47 real-time metrics across all business units</p>
               </div>
             </div>
             <div className="flex-1">
-              <div className="flex items-center gap-2 mb-1">
-                <h3 className="text-sm font-semibold text-foreground">Company Health Score</h3>
-                <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/30 text-[10px]">Good</Badge>
-              </div>
-              <p className="text-xs text-muted-foreground mb-3">Based on 47 real-time metrics across all business units</p>
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
                 {[
                   { label: "Projects", score: 82, color: "bg-blue-500" },
                   { label: "Finance", score: 91, color: "bg-emerald-500" },
@@ -159,7 +164,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 ))}
               </div>
             </div>
-            <div className="flex flex-col gap-2 flex-shrink-0">
+            <div className="hidden xl:flex flex-col gap-2 flex-shrink-0">
               {[
                 { label: "Active Projects", value: "18", icon: FolderKanban, color: "text-blue-400" },
                 { label: "Pending Reviews", value: "7", icon: Eye, color: "text-orange-400" },
@@ -199,13 +204,13 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       {/* Charts Row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {/* Revenue Chart */}
-        <Card className="col-span-2 glass-subtle border-border/60 dark-glow">
-          <CardHeader className="pb-2 pt-4 px-5">
-            <div className="flex items-center justify-between">
+        <Card className="col-span-1 lg:col-span-2 glass-subtle border-border/60 dark-glow">
+          <CardHeader className="pb-2 pt-4 px-4 md:px-5">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <CardTitle className="text-sm font-semibold text-foreground">Revenue vs Expenses</CardTitle>
-              <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-3 text-[10px] text-muted-foreground flex-wrap">
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />Revenue</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-400 inline-block" />Expenses</span>
                 <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-500 inline-block" />Profit</span>
@@ -268,11 +273,11 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       </div>
 
       {/* Bottom Row */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* AI Activity Feed */}
         {can("ai-agents", "view") && (
           <Card className="glass-subtle border-border/60 dark-glow">
-            <CardHeader className="pb-2 pt-4 px-5">
+            <CardHeader className="pb-2 pt-4 px-4 md:px-5">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <Bot className="w-4 h-4 text-primary" />
@@ -281,7 +286,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 <Button variant="ghost" size="sm" className="text-[10px] h-6 px-2 text-muted-foreground" onClick={() => onNavigate("ai-agents")}>View all</Button>
               </div>
             </CardHeader>
-            <CardContent className="px-5 pb-4 space-y-2.5">
+            <CardContent className="px-4 md:px-5 pb-4 space-y-2.5">
               {aiActivityFeed.map(item => (
                 <div key={item.id} className="flex items-start gap-2.5">
                   <span className="text-sm flex-shrink-0 mt-0.5">{item.icon}</span>
@@ -299,7 +304,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         {/* Pending Approvals */}
         {can("administration", "view") && (
           <Card className="glass-subtle border-border/60 dark-glow">
-            <CardHeader className="pb-2 pt-4 px-5">
+            <CardHeader className="pb-2 pt-4 px-4 md:px-5">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <CheckCircle className="w-4 h-4 text-orange-400" />
@@ -308,7 +313,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="px-5 pb-4 space-y-2.5">
+            <CardContent className="px-4 md:px-5 pb-4 space-y-2.5">
               {approvalQueue.slice(0, 4).map(item => (
                 <div key={item.id} className="flex items-start gap-2.5 p-2 rounded-lg bg-muted hover:bg-muted cursor-pointer transition-colors" onClick={() => onNavigate("administration")}>
                   <div className={cn("w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0",
@@ -330,7 +335,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
         {/* Today's Tasks */}
         {can("tasks", "view") && (
           <Card className="glass-subtle border-border/60 dark-glow">
-            <CardHeader className="pb-2 pt-4 px-5">
+            <CardHeader className="pb-2 pt-4 px-4 md:px-5">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
                   <Clock className="w-4 h-4 text-blue-400" />
@@ -339,7 +344,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
                 </CardTitle>
               </div>
             </CardHeader>
-            <CardContent className="px-5 pb-4 space-y-2.5">
+            <CardContent className="px-4 md:px-5 pb-4 space-y-2.5">
               {tasks.map(task => (
                 <div key={task.id} className="flex items-start gap-2.5 p-2 rounded-lg bg-muted hover:bg-muted cursor-pointer transition-colors" onClick={() => onNavigate("tasks")}>
                   <div className={cn("w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0",
@@ -368,7 +373,7 @@ export function Dashboard({ onNavigate }: DashboardProps) {
       {/* Projects at Risk */}
       {can("projects", "view") && (
         <Card className="glass-subtle border-border/60 dark-glow">
-          <CardHeader className="pb-2 pt-4 px-5">
+          <CardHeader className="pb-2 pt-4 px-4 md:px-5">
             <div className="flex items-center justify-between">
               <CardTitle className="text-sm font-semibold text-foreground flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-orange-400" />
@@ -377,8 +382,8 @@ export function Dashboard({ onNavigate }: DashboardProps) {
               <Button variant="ghost" size="sm" className="text-[10px] h-6 px-2 text-muted-foreground" onClick={() => onNavigate("projects")}>View all projects</Button>
             </div>
           </CardHeader>
-          <CardContent className="px-5 pb-4">
-            <div className="grid grid-cols-3 gap-3">
+          <CardContent className="px-4 md:px-5 pb-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {projects.filter(p => p.risk !== "low").map(project => (
                 <div key={project.id} className="p-3 rounded-lg border border-border/60 hover:border-border bg-muted hover:bg-muted/40 cursor-pointer transition-all dark-glow" onClick={() => onNavigate("projects")}>
                   <div className="flex items-start justify-between mb-2">

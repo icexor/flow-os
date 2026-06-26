@@ -2,8 +2,9 @@ import { useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Bell, ChevronDown, X, Loader2, Command } from "lucide-react";
+import { Sparkles, Bell, ChevronDown, X, Loader2, Command, Menu } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const suggestions = [
   "Show projects delayed",
@@ -136,6 +137,8 @@ interface TopbarProps {
   currentPage: string;
   onNavigate: (page: string) => void;
   sidebarCollapsed: boolean;
+  onMobileMenuToggle?: () => void;
+  isMobile?: boolean;
 }
 
 const pageTitles: Record<string, string> = {
@@ -156,22 +159,33 @@ const pageTitles: Record<string, string> = {
   "business-intelligence": "Business Intelligence",
 };
 
-export function Topbar({ currentPage, onNavigate, sidebarCollapsed }: TopbarProps) {
+export function Topbar({ currentPage, onNavigate, sidebarCollapsed, onMobileMenuToggle }: TopbarProps) {
   const { roleData } = useAuth();
+  const mobile = useIsMobile();
 
   return (
     <header className={cn(
       "fixed top-0 right-0 h-16 z-30 flex items-center gap-4 px-4 border-b border-border bg-background/95 backdrop-blur-sm transition-all duration-300",
-      sidebarCollapsed ? "left-16" : "left-60"
+      mobile ? "left-0" : (sidebarCollapsed ? "left-16" : "lg:left-60")
     )}>
-      <div className="flex items-center gap-2 min-w-0">
-        <span className="text-sm font-semibold text-foreground">{pageTitles[currentPage] || currentPage}</span>
+      {/* Mobile Menu Button */}
+      {mobile && (
+        <Button variant="ghost" size="icon" className="w-9 h-9" onClick={onMobileMenuToggle}>
+          <Menu className="w-5 h-5" />
+        </Button>
+      )}
+
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <span className="text-sm font-semibold text-foreground truncate">{pageTitles[currentPage] || currentPage}</span>
         <Badge variant="outline" className="text-[10px] text-muted-foreground border-border hidden sm:flex">
           AI-Powered
         </Badge>
       </div>
 
-      <AICommandBar onNavigate={onNavigate} />
+      {/* Hide AI Command Bar on mobile, show on larger screens */}
+      <div className="hidden md:block flex-1 max-w-2xl">
+        <AICommandBar onNavigate={onNavigate} />
+      </div>
 
       <div className="flex items-center gap-2 flex-shrink-0">
         <Button variant="ghost" size="icon" className="relative w-9 h-9 text-muted-foreground hover:text-foreground" onClick={() => onNavigate("inbox")}>
@@ -186,7 +200,7 @@ export function Topbar({ currentPage, onNavigate, sidebarCollapsed }: TopbarProp
             <span className="text-xs font-medium text-foreground">{roleData?.user || "User"}</span>
             <span className="text-[10px] text-muted-foreground">{roleData?.name || "User"}</span>
           </div>
-          <ChevronDown className="w-3 h-3 text-muted-foreground" />
+          <ChevronDown className="w-3 h-3 text-muted-foreground hidden sm:block" />
         </div>
       </div>
     </header>
